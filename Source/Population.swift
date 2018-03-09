@@ -27,7 +27,12 @@ public struct Population {
             }
         }
     }
-    private(set) var best = Individual()
+    public var best = Individual() {
+        didSet {
+            bestValues = getParameterValues(individual: best)
+        }
+    }
+    public var bestValues = [Double]()
     private(set) var individuals = [Individual]()
     
     public init(numberOfIndividuals: Int, parameters: [Parameter], probabilityForCrossOver: Double, probabilityForMutation: Double, delegate: GeneticAlgoritmDelegate) {
@@ -43,7 +48,7 @@ public struct Population {
         for _ in 0..<numberOfIndividuals {
             var genome = [Int]()
             for _ in 0..<bitCount {
-                genome.append(Int(arc4random_uniform(1)))
+                genome.append(Int(arc4random_uniform(2)))
             }
             var individual = Individual()
             individual.genome = genome
@@ -56,24 +61,26 @@ public struct Population {
         var costAverage = 0.0
         var costMax = -1.0e10
         var costArray = [Double]()
-        var costMin = 1.0e10
         for individual in individuals {
             let c = cost(individual: individual)
             costAverage += c
             costMax = max(c, costMax)
             costArray.append(c)
-            if c < costMin {
-                costMin = c
-                best = individual
-            }
-        }
+         }
         let noInd = individuals.count
         costAverage = costAverage / Double(noInd)
         if costMax / costAverage > 0.0 {
             let b = -1.0 / (costMax - costAverage) / Double(noInd)
             let a = -b * costMax
             var probSum = 0.0
+            var costMin = 1.0e10
+            var bestInd = 0
             for i in 0..<noInd {
+                individuals[i].cost = costArray[i]
+                if costMin > costArray[i] {
+                    bestInd = i
+                    costMin = costArray[i]
+                }
                 costArray[i] = a + b * costArray[i]
                 probSum += costArray[i]
             }
@@ -81,15 +88,18 @@ public struct Population {
                 for i in 0..<noInd {
                     individuals[i].reproductionProbability = costArray[i] / probSum
                 }
+                self.best = individuals[bestInd]
             } else {
                 for i in 0..<noInd {
                     individuals[i].reproductionProbability = 1.0 / Double(noInd)
                 }
+                self.best = individuals.first!
             }
         } else {
             for i in 0..<noInd {
                 individuals[i].reproductionProbability = 1.0 / Double(noInd)
             }
+            self.best = individuals.first!
         }
     }
     
@@ -100,6 +110,7 @@ public struct Population {
         for i in 0..<individuals.count {
             individuals[i].mutation(pMutation: probabilityForMutation)
         }
+        reproductionProbability()
     }
     
     private func selectParents() -> [Int] {
@@ -147,7 +158,7 @@ public struct Population {
         return delegate.costFunction(parameterValues: values)
     }
     
-    private func getParameterValues(individual: Individual) -> [Double] {
+    public func getParameterValues(individual: Individual) -> [Double] {
         var firstBit = 0
         var result = [Double]()
         for parameter in parameters {

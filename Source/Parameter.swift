@@ -10,9 +10,16 @@ import Foundation
 
 
 public struct Parameter {
-    var valueMin = Double()
-    var valueMax = Double()
-    var numberOfBits = Int()
+    public var name = String()
+    public var valueMin = Double()
+    public var valueMax = Double()
+    public var numberOfBits = Int()
+    public init(name: String, valueMin: Double, valueMax: Double, numberOfBits: Int) {
+        self.name = name
+        self.valueMin = valueMin
+        self.valueMax = valueMax
+        self.numberOfBits = numberOfBits
+    }
     func value2Bits(value: Double) -> [Int] {
         let n = Parameter.iPow(base: 2, power: numberOfBits)
         let valueInt = Int((value - valueMin) * Double(n - 1)/(valueMax - valueMin))
@@ -50,8 +57,10 @@ public struct Parameter {
     }
     private static func iPow(base: Int, power: Int) -> Int{
         var prod = 1
-        for _ in 1...power {
-            prod *= base
+        if power > 0 {
+            for _ in 1...power {
+                prod *= base
+            }
         }
         return prod
     }

@@ -11,7 +11,8 @@ import Foundation
 
 public struct Individual {
     var genome = [Int]()
-    var reproductionProbability = Double()
+    public var reproductionProbability = Double()
+    public var cost = Double()
     
     static func crossing(parent1: Individual, parent2: Individual) -> (child1: Individual, child2: Individual) {
         let cutPoint = Int(arc4random_uniform(UInt32(parent1.genome.count)))
